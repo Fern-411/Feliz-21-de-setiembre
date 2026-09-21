@@ -34,9 +34,16 @@ class GalaxiaFlores3D {
     // Controles orbitales personalizados
     this.isDragging = false;
     this.hasMoved = false;
+    this.isPinching = false;
+    this.touchStartDistance = 0;
     this.previousMousePosition = { x: 0, y: 0 };
+
+    const esCelular = typeof window !== 'undefined' && window.innerWidth < 768;
+    const radioInicial = esCelular ? 380 : 260;
+
+    this.initialPinchRadius = radioInicial;
     this.spherical = {
-      radius: 260,
+      radius: radioInicial,
       theta: 0.8,   // Ángulo azimutal
       phi: 1.15     // Ángulo polar (inclinación)
     };
@@ -2118,17 +2125,47 @@ class GalaxiaFlores3D {
       this.ultimoInteraccionTiempo = Date.now();
     });
 
-    // TOUCH
+    // TOUCH (Rotación con 1 dedo y Pellizco para Zoom con 2 dedos)
     el.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         this.isDragging = true;
+        this.isPinching = false;
         this.hasMoved = false;
         this.previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        this.ultimoInteraccionTiempo = Date.now();
+      } else if (e.touches.length === 2) {
+        // INICIO DE PELLIZCO PARA ZOOM (PINCH TO ZOOM)
+        this.isDragging = false;
+        this.isPinching = true;
+        this.touchStartDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        this.initialPinchRadius = this.targetSpherical.radius;
         this.ultimoInteraccionTiempo = Date.now();
       }
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
+      // 1. Zoom por pellizco con 2 dedos
+      if (this.isPinching && e.touches.length === 2) {
+        const currentDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (this.touchStartDistance > 5) {
+          const ratio = currentDistance / this.touchStartDistance;
+          // Si ratio < 1 (juntando dedos), aleja la cámara (aumenta el radio)
+          const maxRadius = (window.innerWidth < 768) ? 680 : 540;
+          const minRadius = 90;
+          const nuevoRadio = this.initialPinchRadius / ratio;
+          this.targetSpherical.radius = Math.max(minRadius, Math.min(maxRadius, nuevoRadio));
+        }
+        this.ultimoInteraccionTiempo = Date.now();
+        return;
+      }
+
+      // 2. Giro orbital con 1 dedo
       if (!this.isDragging || e.touches.length !== 1) return;
       const touch = e.touches[0];
       const deltaX = touch.clientX - this.previousMousePosition.x;
@@ -2147,19 +2184,25 @@ class GalaxiaFlores3D {
     }, { passive: true });
 
     window.addEventListener('touchend', (e) => {
+      if (this.isPinching && e.touches.length < 2) {
+        this.isPinching = false;
+      }
       if (this.isDragging && !this.hasMoved && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
         this.manejarClick(touch.clientX, touch.clientY);
       }
-      this.isDragging = false;
+      if (e.touches.length === 0) {
+        this.isDragging = false;
+      }
       this.ultimoInteraccionTiempo = Date.now();
     });
 
-    // ZOOM
+    // ZOOM RUEDA RATÓN / TOUCHPAD
     el.addEventListener('wheel', (e) => {
       e.preventDefault();
+      const maxRadius = (window.innerWidth < 768) ? 680 : 540;
       this.targetSpherical.radius += e.deltaY * 0.18;
-      this.targetSpherical.radius = Math.max(120, Math.min(420, this.targetSpherical.radius));
+      this.targetSpherical.radius = Math.max(90, Math.min(maxRadius, this.targetSpherical.radius));
       this.ultimoInteraccionTiempo = Date.now();
     }, { passive: false });
   }
@@ -2367,10 +2410,18 @@ class GalaxiaFlores3D {
     }
   }
 
+  ajustarZoom(delta) {
+    const maxRadius = (window.innerWidth < 768) ? 680 : 540;
+    const minRadius = 90;
+    this.targetSpherical.radius = Math.max(minRadius, Math.min(maxRadius, this.targetSpherical.radius + delta));
+    this.ultimoInteraccionTiempo = Date.now();
+  }
+
   resetearVista() {
     this.targetSpherical.theta = 0.8;
     this.targetSpherical.phi = 1.15;
-    this.targetSpherical.radius = 260;
+    const esCelular = window.innerWidth < 768;
+    this.targetSpherical.radius = esCelular ? 380 : 260;
     this.autoRotacion = true;
     this.ultimoInteraccionTiempo = Date.now() - 2000;
   }

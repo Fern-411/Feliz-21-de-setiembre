@@ -125,6 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnReplayWarp = document.getElementById('btn-replay-warp');
   const btnLluvia = document.getElementById('btn-lluvia');
 
+  // Controles de zoom de la galaxia 3D
+  const btnGalaxyZoomIn = document.getElementById('btn-galaxy-zoom-in');
+  const btnGalaxyZoomOut = document.getElementById('btn-galaxy-zoom-out');
+
+  // Control de vista completa del escenario inicial
+  const btnToggleSceneView = document.getElementById('btn-toggle-scene-view');
+  const sceneViewLabel = document.getElementById('scene-view-label');
+  const sceneViewIcon = document.getElementById('scene-view-icon');
+
   const modalTarjeta = document.getElementById('modal-tarjeta-floral');
   const tarjetaDestinatario = document.getElementById('tarjeta-destinatario');
   const tarjetaSubtitulo = document.getElementById('tarjeta-subtitulo');
@@ -819,6 +828,64 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarToast('✨ Modo de cielo cósmico sereno');
     }
   });
+
+  // 7.1 CONTROLES DE ZOOM DE LA GALAXIA 3D (BOTONES FLOTANTES)
+  if (btnGalaxyZoomIn) {
+    btnGalaxyZoomIn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      galaxia3D.ajustarZoom(-75);
+    });
+  }
+
+  if (btnGalaxyZoomOut) {
+    btnGalaxyZoomOut.addEventListener('click', (e) => {
+      e.stopPropagation();
+      galaxia3D.ajustarZoom(75);
+    });
+  }
+
+  // 7.2 CONTROL DE VISTA COMPLETA DEL ESCENARIO DE BIENVENIDA (ESPECIAL CELULARES)
+  if (btnToggleSceneView && welcomeOverlay) {
+    btnToggleSceneView.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const estaCompleto = welcomeOverlay.classList.toggle('scene-fit-all');
+      if (estaCompleto) {
+        if (sceneViewLabel) sceneViewLabel.textContent = 'Vista de Cerca';
+        if (sceneViewIcon) sceneViewIcon.textContent = '🔍';
+        btnToggleSceneView.title = 'Regresar a vista inmersiva de cerca';
+        mostrarToast('🖼️ Escenario Completo: Puedes ver al Zorro, la Palomita y la Víbora Sagrada 🌻', 3500);
+      } else {
+        if (sceneViewLabel) sceneViewLabel.textContent = 'Ver Escenario Completo';
+        if (sceneViewIcon) sceneViewIcon.textContent = '🔍';
+        btnToggleSceneView.title = 'Ver todo el escenario panorámico en 16:9';
+        mostrarToast('✨ Vista de Cerca activada', 2000);
+      }
+    });
+
+    // Soporte táctil: Pan horizontal y pellizco en bienvenida para teléfonos móviles
+    let touchStartX = 0;
+    let bgPosX = 50;
+    const bgLayer = welcomeOverlay.querySelector('.cinematic-bg-layer');
+
+    welcomeOverlay.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+      } else if (e.touches.length === 2) {
+        // Pellizco con 2 dedos alterna la vista completa del escenario
+        btnToggleSceneView.click();
+      }
+    }, { passive: true });
+
+    welcomeOverlay.addEventListener('touchmove', (e) => {
+      if (welcomeOverlay.classList.contains('scene-fit-all')) return;
+      if (e.touches.length === 1 && bgLayer) {
+        const deltaX = e.touches[0].clientX - touchStartX;
+        touchStartX = e.touches[0].clientX;
+        bgPosX = Math.max(10, Math.min(90, bgPosX - (deltaX * 0.12)));
+        bgLayer.style.backgroundPosition = `${bgPosX}% bottom`;
+      }
+    }, { passive: true });
+  }
 
   // 8. MODAL DE TARJETA FLORAL (Inspirado en la Imagen de Referencia)
   function abrirModalTarjeta(indice) {

@@ -81,6 +81,12 @@
     <span>🪐 Arrastra para girar la galaxia en 3D • Toca cualquier flor para leer tu dedicatoria 🌻</span>
   </div>
 
+  <!-- CONTROLES FLOTANTES DE ZOOM DE LA GALAXIA 3D (MÓVIL Y ESCRITORIO) -->
+  <aside class="galaxy-zoom-dock" id="galaxy-zoom-dock" aria-label="Controles de zoom de la galaxia">
+    <button id="btn-galaxy-zoom-in" class="btn-zoom-circle" title="Acercar galaxia" aria-label="Acercar">➕</button>
+    <button id="btn-galaxy-zoom-out" class="btn-zoom-circle" title="Alejar galaxia" aria-label="Alejar">➖</button>
+  </aside>
+
   <!-- TOAST NOTIFICACIÓN -->
   <div id="toast-notice" class="toast-notice" role="alert">
     <span id="toast-message"></span>
@@ -94,6 +100,12 @@
     
     <!-- FONDO PANORÁMICO ILUSTRADO -->
     <div class="cinematic-bg-layer" aria-hidden="true"></div>
+
+    <!-- BOTÓN PARA CAMBIAR ENTRE VISTA PANORÁMICA COMPLETA Y VISTA DE CERCA EN CELULARES -->
+    <button id="btn-toggle-scene-view" class="btn-toggle-scene-view" title="Cambiar modo de vista del escenario" aria-label="Ver escenario completo">
+      <span class="scene-view-icon" id="scene-view-icon">🔍</span>
+      <span id="scene-view-label">Ver Escenario Completo</span>
+    </button>
 
     <!-- COPA DEL ÁRBOL INTERACTIVA (AL HACER CLIC SE SACUDE, CAEN MÁS PÉTALOS Y CORRE VIENTO) -->
     <div id="tree-canopy-interactive" class="tree-canopy-interactive" tabindex="0" role="button" aria-label="Copa del gran árbol dorado" title="¡Toca la copa del árbol para sacudir sus hojas y levantar el viento! 🍃">
