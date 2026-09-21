@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Galaxia de Flores Amarillas 🌻 | Para Ashley y Nedally</title>
+  
+  <!-- Tipografías elegantes Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&family=Pacifico&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="css/flores.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="not-loaded">
+
+  <!-- LIENZO 3D WEBGL (GALAXIA ESPIRAL Y VUELO CÓSMICO) -->
+  <canvas id="webgl-galaxy"></canvas>
+
+  <!-- LIENZO 2D PARA DESTELLOS Y CHISPAS EN PANTALLA -->
+  <canvas id="canvas-petalos"></canvas>
+
+  <!-- ESTRELLAS FUGACES DECORATIVAS EN EL CIELO -->
+  <div class="shooting-stars" aria-hidden="true">
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+  </div>
+
+  <!-- AUDIO OFICIAL (LOCAL Y RESPALDO REMOTO) -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="audio/flores-amarillas.mp3" type="audio/mpeg" />
+    <source src="https://dl.dropboxusercontent.com/scl/fi/xac2mz0t4homhkvkr1d5w/FLORES-AMARILLAS.mp3?rlkey=uush4yu80dlaz54tbfilgdnb5&st=d0wjojvs" type="audio/mpeg" />
+    Tu navegador no soporta reproducción de audio.
+  </audio>
+
+  <!-- CABECERA SUPERIOR DE LA GALAXIA -->
+  <header class="header-tributo">
+    <h1 class="título-principal">Galaxia de Flores Amarillas 🌻</h1>
+    <p class="subtitulo-amigas">
+      Un universo de luz y amistad sincera para <span class="nombre">Ashley</span> &amp; <span class="nombre">Nedally</span> ✨
+    </p>
+  </header>
+
+  <!-- BARRA DE ACCIONES FLOTANTE SUPERIOR -->
+  <aside class="floating-actions" aria-label="Controles interactivos">
+    <button id="btn-open-modal" class="btn-action btn-cartas-highlight" title="Leer cartas y dedicatorias de amistad">
+      💌 Leer Cartas
+    </button>
+    <button id="btn-reset-view" class="btn-action" title="Centrar la vista de la galaxia">
+      🪐 Centrar Vista
+    </button>
+    <button id="btn-replay-warp" class="btn-action" title="Repetir el vuelo espacial de entrada">
+      ✨ Repetir Vuelo
+    </button>
+    <button id="btn-lluvia" class="btn-action" title="Activar / Desactivar lluvia de meteoros 3D y pétalos dorados">
+      🌠 Lluvia de Meteoros
+    </button>
+    <button id="btn-toggle-music" class="btn-action" title="Control de música">
+      <div class="equalizer" id="equalizer">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span id="music-label">Música</span>
+    </button>
+  </aside>
+
+  <!-- HUD INFORMATIVO DURANTE EL VUELO CÓSMICO -->
+  <div id="warp-hud" class="warp-hud">
+    <div class="warp-pill">
+      <span class="warp-spark">✨</span>
+      <span>Viajando por el espacio de flores amarillas...</span>
+    </div>
+  </div>
+
+  <!-- GUÍA DE INTERACCIÓN 3D (BOTTOM HINT) -->
+  <div id="galaxy-hint" class="galaxy-hint">
+    <span>🪐 Arrastra para girar la galaxia en 3D • Toca cualquier flor para leer tu dedicatoria 🌻</span>
+  </div>
+
+  <!-- TOAST NOTIFICACIÓN -->
+  <div id="toast-notice" class="toast-notice" role="alert">
+    <span id="toast-message"></span>
+  </div>
+
+  <!-- ========================================================================
+       PANTALLA DE BIENVENIDA CINEMATOGRÁFICA
+        Protagonistas: El Zorro Astronauta 🦊, La Palomita 🕊️ y La Víbora Sagrada 🐍
+        ======================================================================== -->
+  <section id="welcome-overlay" class="welcome-overlay welcome-cinematic" aria-label="Pantalla de bienvenida">
+    
+    <!-- FONDO PANORÁMICO ILUSTRADO -->
+    <div class="cinematic-bg-layer" aria-hidden="true"></div>
+
+    <!-- COPA DEL ÁRBOL INTERACTIVA (AL HACER CLIC SE SACUDE, CAEN MÁS PÉTALOS Y CORRE VIENTO) -->
+    <div id="tree-canopy-interactive" class="tree-canopy-interactive" tabindex="0" role="button" aria-label="Copa del gran árbol dorado" title="¡Toca la copa del árbol para sacudir sus hojas y levantar el viento! 🍃">
+      <div class="tree-canopy-shimmer"></div>
+    </div>
+
+    <!-- ONDAS DE BRISA EN LA COPA DEL GRAN ÁRBOL DORADO -->
+    <div class="cinematic-tree-breeze" aria-hidden="true"></div>
+
+    <!-- OLAS DE VIENTO QUE RECORREN EL CAMPO DE FLORES AMARILLAS -->
+    <div class="cinematic-meadow-waves" aria-hidden="true">
+      <div class="meadow-wave-band meadow-wave-band--1"></div>
+      <div class="meadow-wave-band meadow-wave-band--2"></div>
+      <div class="meadow-wave-band meadow-wave-band--3"></div>
+    </div>
+
+    <!-- LIENZO CANVAS DE FÍSICA REAL: HOJAS Y PÉTALOS CAYENDO DEL ÁRBOL Y POLEN ASCENDENTE -->
+    <canvas id="canvas-tree-leaves" class="canvas-tree-leaves" aria-hidden="true"></canvas>
+
+    <!-- RAMILLETES DE FLORES AMARILLAS EN PRIMER PLANO QUE SE MECEN CON EL VIENTO -->
+    <div class="cinematic-swaying-flowers-layer" aria-hidden="true">
+      <!-- Esquina Izquierda: Ramillete floral meciéndose -->
+      <div class="swaying-flower-group swaying-flower-group--left">
+        <svg class="swaying-flower-svg stem-1" viewBox="0 0 100 180" width="85" height="155">
+          <path d="M 50 180 Q 42 100 52 40" stroke="#15803d" stroke-width="4.5" fill="none" stroke-linecap="round" />
+          <path d="M 46 110 Q 25 95 18 105 Q 32 120 47 112" fill="#22c55e" />
+          <g transform="translate(52, 40)" class="flower-head-wiggle">
+            <circle cx="0" cy="-18" r="11" fill="#facc15" />
+            <circle cx="17" cy="-7" r="11" fill="#facc15" />
+            <circle cx="11" cy="14" r="11" fill="#facc15" />
+            <circle cx="-11" cy="14" r="11" fill="#facc15" />
+            <circle cx="-17" cy="-7" r="11" fill="#facc15" />
+            <circle cx="0" cy="-14" r="8" fill="#fef08a" />
+            <circle cx="13" cy="-5" r="8" fill="#fef08a" />
+            <circle cx="8" cy="11" r="8" fill="#fef08a" />
+            <circle cx="-8" cy="11" r="8" fill="#fef08a" />
+            <circle cx="-13" cy="-5" r="8" fill="#fef08a" />
+            <circle cx="0" cy="0" r="10" fill="#b45309" stroke="#d97706" stroke-width="1.5" />
+            <circle cx="0" cy="0" r="6" fill="#78350f" />
+          </g>
+        </svg>
+
+        <svg class="swaying-flower-svg stem-2" viewBox="0 0 100 180" width="70" height="130">
+          <path d="M 50 180 Q 60 110 46 50" stroke="#16a34a" stroke-width="3.5" fill="none" stroke-linecap="round" />
+          <g transform="translate(46, 50)" class="flower-head-wiggle flower-head-wiggle--2">
+            <circle cx="0" cy="-14" r="9" fill="#ffd700" />
+            <circle cx="13" cy="-5" r="9" fill="#ffd700" />
+            <circle cx="8" cy="11" r="9" fill="#ffd700" />
+            <circle cx="-8" cy="11" r="9" fill="#ffd700" />
+            <circle cx="-13" cy="-5" r="9" fill="#ffd700" />
+            <circle cx="0" cy="0" r="8" fill="#92400e" stroke="#d97706" stroke-width="1.5" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Esquina Derecha: Ramillete floral meciéndose -->
+      <div class="swaying-flower-group swaying-flower-group--right">
+        <svg class="swaying-flower-svg stem-3" viewBox="0 0 100 180" width="90" height="165">
+          <path d="M 50 180 Q 58 95 48 35" stroke="#15803d" stroke-width="4.5" fill="none" stroke-linecap="round" />
+          <path d="M 53 115 Q 75 100 82 110 Q 68 125 52 117" fill="#22c55e" />
+          <g transform="translate(48, 35)" class="flower-head-wiggle flower-head-wiggle--3">
+            <circle cx="0" cy="-18" r="11" fill="#facc15" />
+            <circle cx="17" cy="-7" r="11" fill="#facc15" />
+            <circle cx="11" cy="14" r="11" fill="#facc15" />
+            <circle cx="-11" cy="14" r="11" fill="#facc15" />
+            <circle cx="-17" cy="-7" r="11" fill="#facc15" />
+            <circle cx="0" cy="-14" r="8" fill="#fef08a" />
+            <circle cx="13" cy="-5" r="8" fill="#fef08a" />
+            <circle cx="8" cy="11" r="8" fill="#fef08a" />
+            <circle cx="-8" cy="11" r="8" fill="#fef08a" />
+            <circle cx="-13" cy="-5" r="8" fill="#fef08a" />
+            <circle cx="0" cy="0" r="10" fill="#b45309" stroke="#d97706" stroke-width="1.5" />
+            <circle cx="0" cy="0" r="6" fill="#78350f" />
+          </g>
+        </svg>
+
+        <svg class="swaying-flower-svg stem-4" viewBox="0 0 100 180" width="75" height="135">
+          <path d="M 50 180 Q 38 105 52 48" stroke="#16a34a" stroke-width="3.5" fill="none" stroke-linecap="round" />
+          <g transform="translate(52, 48)" class="flower-head-wiggle flower-head-wiggle--4">
+            <circle cx="0" cy="-15" r="10" fill="#ffd700" />
+            <circle cx="14" cy="-5" r="10" fill="#ffd700" />
+            <circle cx="9" cy="12" r="10" fill="#ffd700" />
+            <circle cx="-9" cy="12" r="10" fill="#ffd700" />
+            <circle cx="-14" cy="-5" r="10" fill="#ffd700" />
+            <circle cx="0" cy="0" r="8.5" fill="#92400e" stroke="#d97706" stroke-width="1.5" />
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- HUD SUPERIOR: CUENTA REGRESIVA 21 DE SEPTIEMBRE -->
+    <header class="countdown-hud-panel" aria-label="Cuenta regresiva para el 21 de Septiembre">
+      <div class="hud-frame-corners"></div>
+      <div class="hud-header-title">
+        <span class="hud-spark">✨</span>
+        <span class="hud-tag-text">Cuenta Regresiva:</span>
+        <strong class="hud-date-text">21 de Septiembre</strong>
+        <span class="hud-spark">✨</span>
+      </div>
+      <div class="hud-countdown-grid">
+        <div class="hud-time-block">
+          <span id="countdown-days" class="hud-number">00</span>
+          <span class="hud-label">Días</span>
+        </div>
+        <span class="hud-separator">:</span>
+        <div class="hud-time-block">
+          <span id="countdown-hours" class="hud-number">04</span>
+          <span class="hud-label">Hora</span>
+        </div>
+        <span class="hud-separator">:</span>
+        <div class="hud-time-block">
+          <span id="countdown-minutes" class="hud-number">47</span>
+          <span class="hud-label">Min.</span>
+        </div>
+        <span class="hud-separator">:</span>
+        <div class="hud-time-block">
+          <span id="countdown-seconds" class="hud-number">59</span>
+          <span class="hud-label">Segundos</span>
+        </div>
+      </div>
+      <div class="hud-dedicatoria-amigas">
+        <span class="sparkle-gold">🌻</span>
+        <span>Universo de Flores Amarillas para <strong>Ashley</strong> &amp; <strong>Nedally</strong></span>
+        <span class="sparkle-gold">✨</span>
+      </div>
+    </header>
+
+    <!-- ZONAS INTERACTIVAS Y PÍLDORAS NEGRAS DE LOS PROTAGONISTAS -->
+    <div class="protagonistas-interactivos-layer" aria-label="Personajes de amistad">
+      <!-- 1. Zorro Astronauta (Izquierda) -->
+      <div class="hero-hotspot hero-hotspot--zorro" data-amigo="zorrito" tabindex="0" role="button" aria-label="El Zorro Astronauta" title="Toca al Zorro Astronauta 🦊">
+        <div class="hero-aura-ring"></div>
+        <div class="hero-tag-pill">
+          <span class="hero-badge-icon">🦊</span>
+          <span>Zorro Astronauta</span>
+        </div>
+      </div>
+
+      <!-- 2. La Palomita (Centro) -->
+      <div class="hero-hotspot hero-hotspot--paloma" data-amigo="paloma" tabindex="0" role="button" aria-label="La Palomita" title="Toca a La Palomita 🕊️">
+        <div class="hero-aura-ring"></div>
+        <div class="hero-tag-pill">
+          <span class="hero-badge-icon">🕊️</span>
+          <span>La Palomita</span>
+        </div>
+      </div>
+
+      <!-- 3. La Víbora Sagrada (Derecha) -->
+      <div class="hero-hotspot hero-hotspot--vibora" data-amigo="vibora" tabindex="0" role="button" aria-label="La Víbora Sagrada" title="Toca a la Víbora Sagrada 🐍">
+        <div class="hero-aura-ring"></div>
+        <div class="hero-tag-pill">
+          <span class="hero-badge-icon">🐍</span>
+          <span>Víbora Sagrada</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- EFECTO DE PROPULSIÓN Y LLAMARADA EN LA TOBERA DEL COHETE DEL PAISAJE (SIN DUPLICAR COHETE) -->
+    <div id="rocket-launch-fx" class="rocket-launch-fx" aria-hidden="true">
+      <div class="launch-fire-blast"></div>
+      <div class="launch-smoke-plume"></div>
+      <div class="launch-ascension-beam"></div>
+    </div>
+
+    <!-- BASE DE CONTROL DE LANZAMIENTO INFERIOR: DIÁLOGOS ENCIMA DEL BOTÓN -->
+    <footer class="launch-dock-controls">
+      <!-- RECUADRO DE DIÁLOGO DINÁMICO QUE APARECE ENCIMA DEL BOTÓN AL TOCAR UN PERSONAJE -->
+      <div id="hero-dialogue-dock" class="hero-dialogue-dock" role="status" aria-live="polite">
+        <div class="dock-dialogue-content">
+          <span class="dock-dialogue-avatar" id="dock-dialogue-avatar">✨</span>
+          <div class="dock-dialogue-text-wrap">
+            <strong class="dock-dialogue-author" id="dock-dialogue-author">¡Toca a un amigo para escucharlo!</strong>
+            <p class="dock-dialogue-msg" id="dock-dialogue-msg">El Zorro, La Palomita y la Víbora Sagrada tienen un mensaje para ti 💛</p>
+          </div>
+          <button id="dock-dialogue-close" class="dock-dialogue-close" aria-label="Cerrar diálogo" title="Cerrar mensaje">&times;</button>
+        </div>
+      </div>
+
+      <button id="btn-open-gift" class="btn-lanzamiento-cohete" title="Iniciar viaje hacia la gran galaxia 3D">
+        <span class="btn-rocket-icon">🚀</span>
+        <span class="btn-text-main">Iniciar Viaje Espacial</span>
+        <span class="btn-flower-icon">🌻</span>
+      </button>
+    </footer>
+
+    <!-- MODAL DE CONFIRMACIÓN: VUELO ANTICIPADO (CUANDO SE HACE CLIC ANTES DEL 21 DE SEPTIEMBRE) -->
+    <div id="modal-vuelo-anticipado" class="modal-vuelo-anticipado" role="dialog" aria-modal="true" aria-labelledby="vuelo-anticipado-titulo">
+      <div class="vuelo-anticipado-backdrop" id="vuelo-anticipado-backdrop"></div>
+      <div class="vuelo-anticipado-card">
+        <div class="vuelo-anticipado-glow" aria-hidden="true"></div>
+        <button id="btn-cerrar-modal-vuelo" class="vuelo-anticipado-close-x" aria-label="Cerrar modal">&times;</button>
+        
+        <!-- Insignias de los 3 Amigos -->
+        <div class="vuelo-anticipado-crew" aria-hidden="true">
+          <span class="crew-badge" title="Zorro Astronauta">🦊</span>
+          <span class="crew-badge crew-badge--main" title="La Palomita">🕊️</span>
+          <span class="crew-badge" title="Víbora Sagrada">🐍</span>
+        </div>
+
+        <div class="vuelo-anticipado-pill" id="vuelo-anticipado-tiempo-pill">
+          <span class="pill-spark">⏳</span>
+          <span>Faltan <strong id="vuelo-tiempo-txt">03h 30m</strong> para el 21 de Septiembre</span>
+        </div>
+
+        <h3 id="vuelo-anticipado-titulo" class="vuelo-anticipado-titulo">
+          ¿Desean un Vuelo Espacial Anticipado? 🚀
+        </h3>
+
+        <p class="vuelo-anticipado-desc">
+          ¡Sistemas de vuelo y coordenadas listos! Aún faltan unas horas para la medianoche del 21 de septiembre... pero si <strong>Ashley</strong> y <strong>Nedally</strong> quieren ver su galaxia floral ahora mismo, el <strong>Zorrito</strong> 🦊, <strong>La Palomita</strong> 🕊️ y la <strong>Víbora Sagrada</strong> 🐍 pueden encender los propulsores de inmediato.
+        </p>
+
+        <div class="vuelo-anticipado-actions">
+          <button id="btn-despegar-anticipado" class="btn-despegar-anticipado" title="Despegar ahora mismo hacia la galaxia 3D">
+            <span class="btn-action-icon">🚀</span>
+            <span>Despegar Ahora (Vuelo Anticipado)</span>
+          </button>
+          <button id="btn-esperar-hora" class="btn-esperar-hora" title="Esperar a la medianoche">
+            <span class="btn-action-icon">⏳</span>
+            <span>Esperar la Hora</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNER CELEBRACIÓN FULGURANTE (SE ACTIVA AL LLEGAR A CERO O EN EL DÍA 21) -->
+    <div id="celebracion-dia-21" class="celebracion-dia-21" role="status" aria-live="assertive">
+      <div class="celebracion-container">
+        <div class="celebracion-sparks" aria-hidden="true">✨🌻✨</div>
+        <div class="celebracion-body">
+          <span class="celebracion-badge">🎉 ¡Llegó la Medianoche Cósmica! 🎉</span>
+          <h2 class="celebracion-main-text">
+            «¡Llegó el 21 de Septiembre! ¡Feliz Día de las Flores Amarillas, Ashley y Nedally! 🌻✨»
+          </h2>
+          <p class="celebracion-subtext">
+            Los propulsores están al 100% de potencia. ¡La galaxia entera florece para ustedes dos!
+          </p>
+        </div>
+        <div class="celebracion-sparks" aria-hidden="true">✨🌻✨</div>
+        <button id="btn-cerrar-celebracion" class="celebracion-close-btn" aria-label="Cerrar notificación de celebración">&times;</button>
+      </div>
+    </div>
+
+    <!-- FLASH BLANCO/DORADO DE HIPERVELOCIDAD DURANTE EL DESPEGUE -->
+    <div id="hyperdrive-flash" class="hyperdrive-flash"></div>
+  </section>
+
+  <!-- ========================================================================
+       MODAL DE TARJETA DEDICATORIA FLORAL (INSPIRADO EN LA IMAGEN DE REFERENCIA)
+       ======================================================================== -->
+  <div id="modal-tarjeta-floral" class="modal-tarjeta-overlay" role="dialog" aria-modal="true" aria-labelledby="tarjeta-destinatario">
+    <div class="tarjeta-floral-container">
+      <div class="tarjeta-floral-card">
+        
+        <!-- Banda superior decorativa -->
+        <div class="tarjeta-decoracion-superior">
+          <span class="tarjeta-fecha-badge">🌻 21 DE SEPTIEMBRE • AMISTAD SINCERA 💛</span>
+        </div>
+
+        <!-- Encabezado caligráfico -->
+        <h2 id="tarjeta-destinatario" class="tarjeta-destinatario">Para Ashley ✨</h2>
+        <h3 id="tarjeta-subtitulo" class="tarjeta-subtitulo">Luz, Alegría y Gratitud</h3>
+
+        <!-- Cuerpo del mensaje -->
+        <div class="tarjeta-cuerpo-scroll">
+          <p id="tarjeta-mensaje" class="tarjeta-mensaje">
+            <!-- Texto dinámico inyectado por app.js -->
+          </p>
+        </div>
+
+        <!-- Ilustración botánica en la base estilo maceta con flores -->
+        <div class="tarjeta-ilustracion-base">
+          <div class="ramo-ilustrado">
+            <div class="ramo-flor ramo-flor--1"></div>
+            <div class="ramo-flor ramo-flor--2"></div>
+            <div class="ramo-flor ramo-flor--3"></div>
+            <div class="ramo-maceta">
+              <span id="tarjeta-maceta-tag">Para Ti 🌻</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de navegación y cierre -->
+        <div class="tarjeta-acciones">
+          <button id="btn-tarjeta-prev" class="btn-tarjeta-nav" title="Dedicatoria anterior">
+            ◀
+          </button>
+          <button id="btn-tarjeta-cerrar" class="btn-tarjeta-cerrar" title="Cerrar dedicatoria">
+            Cerrar 🌻
+          </button>
+          <button id="btn-tarjeta-next" class="btn-tarjeta-nav" title="Siguiente dedicatoria">
+            ▶
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS: MOTOR THREE.JS LOCAL, GALAXIA 3D, PÉTALOS Y APLICACIÓN -->
+  <script src="js/three.min.js"></script>
+  <script src="js/galaxia3d.js"></script>
+  <script src="js/petalos.js"></script>
+  <script src="js/viento-escena.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
